@@ -285,6 +285,9 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
 @keyframes tilt{0%,25%{transform:rotate(0)} 55%,100%{transform:rotate(-90deg)}}
 @media (orientation:portrait) and (max-width:600px) and (pointer:coarse){ html:not(.portrait-ok) .rotate{display:flex} }
 @media (prefers-reduced-motion: reduce){ .slide{transition:none} .rotate svg{animation:none} }
+/* Desktop: the figure's height never depends on the text column, so hover text can't resize it. */
+@media (min-width:821px) and (min-height:501px){ .slide{grid-template-rows:minmax(0,1fr)} .txt{max-height:100%; overflow-y:auto; overscroll-behavior:contain} }
+.dcstat b{font-family:var(--f-body)}
 </style>
 </head>
 <body>
@@ -313,7 +316,7 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
         <p>Your early-career System, SoC and Compute Architect roles ask for four things. A CV can&rsquo;t show how I think, so I&rsquo;ve made my work into live figures.</p>
         <div class="how">
           <div class="mono muted">How this deck works</div>
-          <div><b>13 slides, about five minutes.</b> Arrow keys, a swipe, or the numbers along the top.</div>
+          <div><b>14 slides, about six minutes.</b> Arrow keys, a swipe, or the numbers along the top.</div>
           <div><b>One idea per slide:</b> a short background, three steps, and an orange card quoting the line of your job description it answers.</div>
           <div><b>Every figure is live.</b> Tap blocks, flip toggles, drag sliders. Try it here: tap any block in the figure.</div>
         </div>
@@ -323,6 +326,26 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
       <div class="viz">
         <div class="vbar"><span class="mono">Fig. 1 · everything that feeds in</span><button type="button" id="flowClear">Show all</button></div>
         <div class="fill"><svg id="flow" viewBox="0 0 1200 690" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Industry roles, projects and modules, each routed into the four things Fractile's architecture roles ask for, then into Fractile and the areas Archie wants to grow"></svg></div>
+      </div>
+    </section>
+
+    <!-- 2 · Your problem: decode is memory-bound -->
+    <section class="slide" data-id="decode" data-kind="module" data-title="Your problem">
+      <div class="txt">
+        <div class="mono muted">Your problem · as I understand it</div>
+        <h2>Every token reads <em>every weight</em></h2>
+        <p class="bg"><b>Background.</b> Your essay says inference speed, above all memory bandwidth, is what holds frontier AI back. I built this model to see why.</p>
+        <ol class="steps"><li><span>Each new token reads <b>every weight</b> once, plus the <b>KV cache</b> for the whole context.</span></li><li><span>So at batch one, <b>tokens per second &asymp; bandwidth &divide; bytes per token</b>. Compute barely matters.</span></li><li><span>Tokens come <b>one after another</b>, each needing the last, so you can&rsquo;t parallelise your way out.</span></li></ol>
+        <a class="tie" href="https://jobs.ashbyhq.com/fractile/70813816-3050-4100-944d-9de5c2c0fab0"><span class="mono">From your job description · SoC Architect</span><b>&ldquo;How compute, memory and interconnect choices trade off against each other at the full-chip level&rdquo; ↗</b><span>Push the context to a million tokens and, on the 70B model, the KV cache outgrows the weights: capacity and bandwidth become one problem.</span></a>
+      </div>
+      <div class="viz">
+        <div class="vbar"><span class="mono">Fig. 2 · decode is memory-bound</span>
+          <span class="seg" role="group" aria-label="Model size"><button type="button" data-dm="8b" aria-pressed="false">8B</button><button type="button" data-dm="70b" aria-pressed="true">70B</button><button type="button" data-dm="405b" aria-pressed="false">405B</button></span>
+          <span class="seg" role="group" aria-label="Precision"><button type="button" data-dp="fp16" aria-pressed="false">FP16</button><button type="button" data-dp="fp8" aria-pressed="true">FP8</button><button type="button" data-dp="fp4" aria-pressed="false">FP4</button></span></div>
+        <div class="tzrow"><label class="mono" for="dcCtx">Context</label><input type="range" id="dcCtx" min="3" max="6" step="0.05" value="3.9"><b class="mono" id="dcCtxR"></b></div>
+        <div class="tzrow"><label class="mono" for="dcBw">Bandwidth</label><input type="range" id="dcBw" min="0" max="2.3" step="0.005" value="0.525"><b class="mono" id="dcBwR"></b></div>
+        <div class="fill"><svg id="dcSvg" viewBox="0 0 960 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Bytes read per token, split into weights and KV cache, and the tokens per second that a given memory bandwidth allows, against 40 and 1,200 tokens per second"></svg></div>
+        <div class="cap">My model, not a measurement: a dense model at batch one, every weight and cached key/value read once per token, compute ignored. KV sizes use Llama&nbsp;3.1 shapes; 3.35&nbsp;TB/s is one H100&rsquo;s HBM.</div>
       </div>
     </section>
 
@@ -337,11 +360,11 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
           <li><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="5" width="30" height="30" rx="2" style="fill:var(--salmon);stroke:var(--ink);stroke-width:1.2"/><path d="M13 20.5l5 5 9-11" style="fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"/></svg><span>Border all one colour? <b>Fill the inside</b>, no maths needed.</span></li>
           <li><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="5" width="30" height="30" rx="2" style="fill:none;stroke:var(--ink);stroke-width:1.2"/><path d="M20 5v30M5 20h30" style="stroke:var(--orange);stroke-width:2"/></svg><span>If not, <b>split into four</b> and repeat. At the smallest size, compute every pixel.</span></li>
         </ol>
-        <a class="tie" href="https://jobs.ashbyhq.com/fractile/31b5ab05-7d41-485d-b04b-38f3923e4de7"><span class="mono">From your job description · Compute Architect</span><b>&ldquo;Performance modelling, specification writing, bottleneck analysis&rdquo; ↗</b><span>The bottleneck was iterating every pixel. A cheap border check decides where the expensive maths goes: try the spiral (74%) against the cardioid (29%).</span></a>
+        <a class="tie" href="https://jobs.ashbyhq.com/fractile/31b5ab05-7d41-485d-b04b-38f3923e4de7"><span class="mono">From your job description · Compute Architect</span><b>&ldquo;Performance modelling, specification writing, bottleneck analysis&rdquo; ↗</b><span>The bottleneck was iterating every pixel. A cheap border check decides where the expensive maths goes: the fastest work is the work you never do.</span></a>
       </div>
       <div class="viz vauto">
         <div class="vbar">
-          <span class="mono">Fig. 2 · Mariani–Silver on two engines</span>
+          <span class="mono">Fig. 3 · Mariani–Silver on two engines</span>
           <span class="seg" id="msPreset"></span>
           <span class="seg"><button type="button" id="msMode" aria-pressed="false">Brute force</button><button type="button" id="msBoxes" aria-pressed="true">Boxes</button><button type="button" id="msRun">Replay</button></span>
         </div>
@@ -362,15 +385,15 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
     <!-- 3 · PYNQZOOM hardware -->
     <section class="slide" data-id="pynqzoom" data-kind="project" data-title="PYNQZOOM hardware">
       <div class="txt">
-        <div class="mono muted">PYNQZOOM · inside the FPGA</div>
-        <h2>48 cores, and the <em>CPU gets out of the way</em></h2>
+        <div class="mono muted">PYNQZOOM · cores and the memory path</div>
+        <h2>48 cores, and <em>one port to memory</em></h2>
         <p class="bg"><b>Background.</b> The board&rsquo;s chip has an ARM CPU and an FPGA side by side. We put the whole renderer in the FPGA. I helped design it and wrote the software around it.</p>
-        <ol class="steps"><li><span>The CPU sets the view and presses start. <b>The FPGA renders the whole frame</b> by itself.</span></li><li><span>Two engines take <b>alternate sixteenths</b>. Each has a Mariani–Silver scheduler and 24 cores.</span></li><li><span>A comparator checks each border: <b>fill, split, or compute every pixel</b>.</span></li></ol>
-        <a class="tie" href="https://jobs.ashbyhq.com/fractile/31b5ab05-7d41-485d-b04b-38f3923e4de7"><span class="mono">From your job description · Compute Architect</span><b>&ldquo;Real hands-on exposure to processor or accelerator design, through a final-year project, FPGA build…&rdquo; ↗</b><span>This is that FPGA build: a 48-core fractal accelerator. The ARM CPU sets the view; the fabric renders the whole frame.</span></a>
+        <ol class="steps"><li><span>The CPU sets the view and presses start. <b>The FPGA renders the whole frame</b> by itself.</span></li><li><span>Two engines take <b>alternate sixteenths</b>, each with a Mariani–Silver scheduler and 24 cores.</span></li><li><span>Both share <b>one port to DDR</b>, so a filled tile is one table entry, not 256 pixel writes.</span></li></ol>
+        <a class="tie" href="https://jobs.ashbyhq.com/fractile/31b5ab05-7d41-485d-b04b-38f3923e4de7"><span class="mono">From your job description · Compute Architect</span><b>&ldquo;Real hands-on exposure to processor or accelerator design, through a final-year project, FPGA build…&rdquo; ↗</b><span>This is that FPGA build: a 48-core accelerator, shaped as much by its one memory port as by its cores. Tap the AXI-HP block.</span></a>
         <a class="mono" href="https://github.com/PYNQPANTHERS/fractal-accelerator-rtl">My repo: RTL ↗</a>
       </div>
       <div class="viz">
-        <div class="vbar"><span class="mono">Fig. 3 · inside the fabric</span>
+        <div class="vbar"><span class="mono">Fig. 4 · inside the fabric</span>
           <span class="seg" role="group" aria-label="Build"><button type="button" data-hw="dual_core" aria-pressed="true">dual_core · 48 cores</button><button type="button" data-hw="dual_precision" aria-pressed="false">dual_precision · 32 cores</button></span></div>
         <div class="fill"><svg id="hwSvg" viewBox="0 -50 1100 600" preserveAspectRatio="xMidYMid meet" role="img" aria-label="PYNQZOOM fabric: ARM CPU, sixteenth controller, two engines each with scheduler, queues, three clusters of eight cores, comparator and BRAM, sharing one DDR write port"></svg></div>
         <div class="cap" id="hwCap"></div>
@@ -380,15 +403,15 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
     <!-- 4 · More cores or more precision -->
     <section class="slide" data-id="tradeoff" data-kind="project" data-title="Cores vs precision">
       <div class="txt">
-        <div class="mono muted">PYNQZOOM · the trade-off</div>
+        <div class="mono muted">PYNQZOOM · precision is a budget</div>
         <h2>More cores, or <em>more precision?</em></h2>
         <p class="bg"><b>Background.</b> The FPGA has a fixed budget of multipliers and logic. We could spend it on more cores, or on cores that can also do wider maths. We built both.</p>
         <ol class="steps"><li><span><b>More cores</b> (dual_core, 48): more pixels at once, so frames arrive faster.</span></li><li><span><b>More precision</b> (dual_precision, 32): each core can switch to wide maths, 33 fraction bits instead of 16.</span></li><li><span>Past about <b>256× zoom</b>, 16 bits can&rsquo;t tell neighbouring pixels apart and the image turns to blocks. Only wide mode goes deeper, at roughly a fifth of the speed.</span></li></ol>
-        <a class="tie" href="https://jobs.ashbyhq.com/fractile/70813816-3050-4100-944d-9de5c2c0fab0"><span class="mono">From your job description · SoC &amp; Compute Architect</span><b>&ldquo;How physical design constraints feed back into architectural choices&rdquo; ↗</b><span>The FPGA&rsquo;s multiplier budget was fixed, and it forced the choice: 48 narrow cores, or 32 that can switch to wider maths. The right build depends on the zoom.</span></a>
+        <a class="tie" href="https://jobs.ashbyhq.com/fractile/70813816-3050-4100-944d-9de5c2c0fab0"><span class="mono">From your job description · SoC &amp; Compute Architect</span><b>&ldquo;How physical design constraints feed back into architectural choices&rdquo; ↗</b><span>Our multiplier budget was fixed, so precision cost cores. Inference makes the same trade with FP8 and FP4: narrower numbers, more throughput, until the answer breaks.</span></a>
         <a class="mono" href="https://github.com/PYNQPANTHERS/fractal-accelerator-rtl">My repo: RTL ↗</a>
       </div>
       <div class="viz">
-        <div class="vbar"><span class="mono">Fig. 4 · same view, two builds</span>
+        <div class="vbar"><span class="mono">Fig. 5 · same view, two builds</span>
           <span class="seg" id="tzPreset"></span></div>
         <div class="tzrow"><label class="mono" for="tzZoom">Zoom</label><input type="range" id="tzZoom" min="0" max="26" step="0.5" value="10"><b class="mono" id="tzRead">1 024×</b><span class="pick" id="tzPick"></span></div>
         <div class="tw">
@@ -411,7 +434,7 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
         <a class="mono" href="https://github.com/PYNQPANTHERS/fractal-accelerator-rtl/tree/main/tb">My repo: testbenches ↗</a>
       </div>
       <div class="viz">
-        <div class="vbar"><span class="mono">Fig. 5 · simulation streams</span><span class="mono muted">Tap a stage</span></div>
+        <div class="vbar"><span class="mono">Fig. 6 · simulation streams</span><span class="mono muted">Tap a stage</span></div>
         <div class="fill"><svg id="vfSvg" viewBox="0 0 980 520" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Verification flow: RTL into unit and full-frame testbenches, run in Icarus Verilog, producing waveforms, CSV streams and PNG frames"></svg></div>
         <div class="cap" id="vfCap">30 testbenches across both builds, run with Icarus Verilog and cocotb; one command runs them all.</div>
       </div>
@@ -424,11 +447,11 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
         <h2>640 rays a frame, and <em>none of them depend on each other</em></h2>
         <p class="bg"><b>Background.</b> PYNQcast is a team-built multiplayer game. Each PYNQ-Z1 board draws a first-person 3D view in its FPGA, 640 × 480 at about 60 fps, Wolfenstein-style.</p>
         <ol class="steps"><li><span>For each screen column, <b>cast one ray</b> from the player.</span></li><li><span>Step it across the map <b>one grid line at a time</b> (DDA). Lookup tables replace the divides.</span></li><li><span>The distance to the first wall sets <b>that column&rsquo;s wall height</b>.</span></li></ol>
-        <a class="tie" href="https://jobs.ashbyhq.com/fractile/31b5ab05-7d41-485d-b04b-38f3923e4de7"><span class="mono">From your job description · Compute Architect</span><b>&ldquo;AI acceleration/vector-matrix compute&rdquo; ↗</b><span>A frame is 640 independent lanes of the same arithmetic, the shape accelerators are built for. Lookup tables replace the divides, because dividers cost area and cycles.</span></a>
+        <a class="tie" href="https://jobs.ashbyhq.com/fractile/31b5ab05-7d41-485d-b04b-38f3923e4de7"><span class="mono">From your job description · Compute Architect</span><b>&ldquo;AI acceleration/vector-matrix compute&rdquo; ↗</b><span>Rays parallelise perfectly. Your essay&rsquo;s point is that tokens don&rsquo;t: each depends on the last. That&rsquo;s why the speed of every single step is the whole game.</span></a>
         <a class="mono" href="https://github.com/PYNQcast/HardwareSide_PYNQ_Raycaster">Team repo: raycaster RTL ↗</a>
       </div>
       <div class="viz">
-        <div class="vbar"><span class="mono">Fig. 6 · DDA raycasting</span>
+        <div class="vbar"><span class="mono">Fig. 7 · DDA raycasting</span>
           <span class="seg" role="group" aria-label="View"><button type="button" data-rc="live" aria-pressed="true">Live algorithm</button><button type="button" data-rc="sim" aria-pressed="false">RTL simulation frame</button></span></div>
         <div class="fill" id="rcFill"><canvas id="rcCanvas" style="width:100%; height:100%; display:block" aria-label="Top-down map with rays stepping cell by cell, beside the 3D view they produce"></canvas></div>
         <div class="cap" id="rcCap">Left: the map from above, with every tenth ray. Right: the view those rays build, one column at a time. The highlighted ray shows its DDA steps.</div>
@@ -446,7 +469,7 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
         <a class="mono" href="https://github.com/PYNQcast/ServerSide_PYNQ_Raycaster">My repo: server ↗</a>
       </div>
       <div class="viz">
-        <div class="vbar"><span class="mono">Fig. 7 · staged pipeline</span><span class="mono muted">Hover a stage</span></div>
+        <div class="vbar"><span class="mono">Fig. 8 · staged pipeline</span><span class="mono muted">Hover a stage</span></div>
         <div class="fill"><svg id="pcSvg" viewBox="0 -24 960 510" preserveAspectRatio="xMidYMid meet" role="img" aria-label="PYNQcast staged server diagram"></svg></div>
         <div class="cap" id="pcCap">The network to AWS (20–50 ms) is the slow part. Everything on the server takes under a millisecond. Hover a stage for detail.</div>
       </div>
@@ -462,7 +485,7 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
         <a class="tie" href="https://jobs.ashbyhq.com/fractile/c3de27ea-9cb5-4e96-80c6-4adc2bf87792"><span class="mono">From your job description · System Architect</span><b>&ldquo;Exposure to system-level design concepts — power, thermal, I/O…&rdquo; ↗</b><span>Power architecture at 60 kW: three sources on one 540 V bus, each matched to how fast its share of the demand changes.</span></a>
       </div>
       <div class="viz">
-        <div class="vbar"><span class="mono">Fig. 8 · a load step hits the bus</span>
+        <div class="vbar"><span class="mono">Fig. 9 · a load step hits the bus</span>
           <span class="seg" role="group" aria-label="Sources"><button type="button" data-bus="three" aria-pressed="true">Three rates</button><button type="button" data-bus="fc" aria-pressed="false">Fuel cell alone</button></span><button type="button" id="busRun">Replay</button></div>
         <div class="fill"><canvas id="busCanvas" style="width:100%; height:100%; display:block" aria-label="Load power, source outputs and bus voltage over six seconds"></canvas></div>
         <div class="cap" id="busCap"></div>
@@ -483,7 +506,7 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
         <a class="tie" href="https://jobs.ashbyhq.com/fractile/c3de27ea-9cb5-4e96-80c6-4adc2bf87792"><span class="mono">From your job description · System Architect</span><b>&ldquo;Hands-on FPGA prototyping or hardware bring-up&rdquo; ↗</b><span>You want people curious about taking hardware &ldquo;from concept through to production&rdquo;. I took this rig from a design to live 60 kW hardware.</span></a>
       </div>
       <div class="viz">
-        <div class="vbar"><span class="mono">Fig. 9 · same shape, different silicon</span>
+        <div class="vbar"><span class="mono">Fig. 10 · same shape, different silicon</span>
           <span class="seg" role="group" aria-label="View"><button type="button" data-gk="rig" aria-pressed="true">My GKN rig</button><button type="button" data-gk="cal" aria-pressed="false">Your system role</button></span></div>
         <div class="fill"><svg id="gkSvg" viewBox="0 0 960 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A router sending work to three kinds of hardware, shown for Archie's rig or for the System Architect role"></svg></div>
         <div class="cap" id="gkCap"></div>
@@ -501,7 +524,7 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
         <a class="mono" href="https://github.com/SAMOS-76/RISC-V-Team7">Team repo ↗</a>
       </div>
       <div class="viz">
-        <div class="vbar"><span class="mono">Fig. 10 · the cache</span>
+        <div class="vbar"><span class="mono">Fig. 11 · the cache</span>
           <span class="seg" role="group" aria-label="View"><button type="button" data-rv="fsm" aria-pressed="true">How a miss works</button><button type="button" data-rv="cpu" aria-pressed="false">Full CPU</button><button type="button" data-rv="cache" aria-pressed="false">Inside the cache</button></span></div>
         <div class="fill" id="rvFill"></div>
         <div class="cap" id="rvCap"></div>
@@ -511,15 +534,15 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
     <!-- 11 · ETL -->
     <section class="slide" data-id="etl" data-kind="industry" data-title="ETL: learning fast">
       <div class="txt">
-        <div class="mono muted">ETL Systems · RF test technician · 2023–24</div>
+        <div class="mono muted">ETL Systems · RF test technician · 2023–24 · bring-up and test</div>
         <h2>No engineering background, <em>up to speed fast</em></h2>
         <p class="bg"><b>Background.</b> I deferred Imperial and joined ETL straight from sixth form, with no engineering or satellite experience. ETL builds RF routing kit for satellite ground stations.</p>
         <ol class="steps"><li><span>Joined a tight-knit <b>new product introduction</b> team and fitted in fast.</span></li><li><span>Learned RF from scratch, and was soon <b>debugging 100+ board faults</b> on my own.</span></li><li><span>Automated test benches and reporting: manual test time <b>−25%</b>.</span></li></ol>
         <p class="why">I won&rsquo;t know everything you need on day one. ETL shows how fast I close the gap, and this year I&rsquo;ve added Advanced Computer Architecture, ML and Deep Learning.</p>
-        <a class="tie" href="https://jobs.ashbyhq.com/fractile/70813816-3050-4100-944d-9de5c2c0fab0"><span class="mono">From your job description · SoC &amp; Compute Architect</span><b>&ldquo;A track record of thriving in ambiguity and fast iteration&rdquo; ↗</b><span>New product introduction is ambiguity by design: kit that hasn&rsquo;t been built before, and faults nobody has seen yet. I was soon debugging them on my own.</span></a>
+        <a class="tie" href="https://jobs.ashbyhq.com/fractile/c3de27ea-9cb5-4e96-80c6-4adc2bf87792"><span class="mono">From your job description · System Architect</span><b>&ldquo;Hands-on exposure to early prototyping, bring-up, and system testing&rdquo; ↗</b><span>New product introduction is bring-up in practice: first boards, faults nobody has seen yet. I was soon debugging 100+ of them alone, and automated the test benches.</span></a>
       </div>
       <div class="viz">
-        <div class="vbar"><span class="mono">Fig. 11 · a ground station is a routing problem</span>
+        <div class="vbar"><span class="mono">Fig. 12 · redundancy, designed in</span>
           <span class="seg" role="group" aria-label="State"><button type="button" data-etl="ok" aria-pressed="true">Normal</button><button type="button" data-etl="fail" aria-pressed="false">A path fails</button></span></div>
         <div class="fill"><svg id="etlSvg" viewBox="0 0 960 470" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Satellite ground station: antennas and converters feed an RF matrix that routes signals to modems, with a spare path for failover"></svg></div>
         <div class="cap" id="etlCap"></div>
@@ -535,7 +558,7 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
         <div class="how">
           <div class="mono muted">Why Fractile</div>
           <div><b>Speed is the problem I keep choosing.</b> Mariani–Silver skips work, the raycaster runs 640 rays at once, PYNQcast keeps slow writes off the hot path. You make speed the whole company.</div>
-          <div><b>Memory is where it&rsquo;s won.</b> Your essay names memory bandwidth as what failed to scale. The cache I wrote, and Deep Learning this year, are both that question.</div>
+          <div><b>Memory is where it&rsquo;s won.</b> Your essay names memory bandwidth as what failed to scale; slide 2 is me working out why. The cache I wrote, and Deep Learning this year, are both that question.</div>
           <div><b>Architecture that has to work.</b> &ldquo;Architecture at Fractile isn&rsquo;t a paper exercise.&rdquo; My best lessons came from hardware: a stall asserted one cycle late corrupted our pipeline.</div>
         </div>
         <a class="tie" href="https://fractile.ai/manifesto.html"><span class="mono">From your essay</span><b>The future of AI scaling ↗</b><span>&ldquo;To compress that month into a day, we will need to generate output at ~1,200 tokens per second.&rdquo; I want to help build the chips that do it.</span></a>
@@ -557,6 +580,13 @@ button[aria-pressed="true"]{background:var(--ink); color:var(--bg)}
         <h2>What I&rsquo;d bring</h2>
         <p>I learn fast: I joined ETL from sixth form with no RF background and was soon fixing 100+ board faults alone.</p>
         <p class="bg">I measure before I optimise, and I&rsquo;m patient with bugs that live between components.</p>
+        <div class="how">
+          <div class="mono muted">Skills</div>
+          <div><b>Computer architecture.</b> Pipelines, caches and memory hierarchies: a 2-way write-back cache in a RISC-V CPU, and a gem5 + McPAT design-space study.</div>
+          <div><b>System design.</b> A 60 kW, 540 V power rig, its control split across CPU, FPGA and microcontroller over fibre, CANopen and DMA, taken through bring-up.</div>
+          <div><b>RTL and verification.</b> Verilog and SystemVerilog on Zynq FPGAs, AXI, Icarus Verilog and cocotb testbenches.</div>
+          <div><b>Software and modelling.</b> Python and C, a C-to-RISC-V compiler, an AWS game server, and first-order performance models like slide 2.</div>
+        </div>
         <a class="tie" href="https://fractile.ai/jobs.html"><span class="mono">Your roles</span><b>Early Career System, SoC &amp; Compute Architect ↗</b><span>This page is my application.</span></a>
       </div>
       <div class="viz" style="justify-content:center">
@@ -1221,6 +1251,55 @@ MOD.gkn=(()=>{
   return { render, tick(t){ if(d) tickDots(d,t); } };
 })();
 
+/* ---------- 2 · Decode is memory-bound ---------- */
+MOD.decode=(()=>{
+  // Dense models at batch one. kv = values cached per token of context: 2 (K and V) × layers × KV heads × head dim (Llama 3.1 shapes).
+  const MODELS={'8b':{p:8e9,kv:2*32*8*128},'70b':{p:70e9,kv:2*80*8*128},'405b':{p:405e9,kv:2*126*8*128}};
+  const BYTES={fp16:2,fp8:1,fp4:.5};
+  let model='70b', prec='fp8';
+  const svg=document.getElementById('dcSvg'), ctxIn=document.getElementById('dcCtx'), bwIn=document.getElementById('dcBw');
+  const ctxR=document.getElementById('dcCtxR'), bwR=document.getElementById('dcBwR');
+  const gb=b=>b>=1e11?Math.round(b/1e9)+' GB':b>=1e9?(b/1e9).toFixed(1)+' GB':Math.round(b/1e6)+' MB';
+  const tokens=n=>n>=1e6?(n/1e6).toFixed(1).replace(/\.0$/,'')+'M':Math.round(n/1e3)+'k';
+  const dur=days=>days>=2?Math.round(days)+' days':days*24>=2?Math.round(days*24)+' hours':Math.max(1,Math.round(days*1440))+' minutes';
+  const X0=60, X1=900, lx=v=>X0+Math.log10(Math.min(1e4,Math.max(1,v)))/4*(X1-X0);
+  function render(){
+    const m=MODELS[model], b=BYTES[prec], ctx=10**(+ctxIn.value), bw=10**(+bwIn.value);
+    const wB=m.p*b, kvB=m.kv*b*ctx, tot=wB+kvB, tps=bw*1e12/tot;
+    ctxR.textContent=tokens(ctx)+' tokens'; bwR.textContent=(bw<10?bw.toFixed(2):Math.round(bw))+' TB/s';
+    svg.innerHTML=''; svgStyle(svg);
+    // bytes read per token, split into weights and KV cache
+    textOn(svg,X0,26,'BYTES READ FOR EVERY TOKEN','meta','start');
+    const wx=X0+(X1-X0)*wB/tot;
+    mk('rect',{x:X0,y:38,width:Math.max(2,wx-X0),height:34,rx:6,fill:css('--orange')},svg);
+    if(X1-wx>1) mk('rect',{x:wx,y:38,width:X1-wx,height:34,rx:6,fill:css('--blue')},svg);
+    textOn(svg,X0,94,`WEIGHTS ${gb(wB)}`,'','start').style.fill=css('--brick');
+    textOn(svg,X1,94,`KV CACHE ${gb(kvB)}`,'','end').style.fill=css('--blue');
+    textOn(svg,(X0+X1)/2,94,`= ${gb(tot)} per token`,'meta');
+    // tokens per second on a log axis, with today's speed and Fractile's target
+    const ay=210;
+    textOn(svg,X0,140,'TOKENS PER SECOND, ONE STREAM','meta','start');
+    mk('line',{x1:X0,y1:ay,x2:X1,y2:ay,stroke:css('--ink'),'stroke-opacity':.35},svg);
+    [[1,'1'],[10,'10'],[100,'100'],[1e3,'1k'],[1e4,'10k']].forEach(([v,l])=>{ mk('line',{x1:lx(v),y1:ay-5,x2:lx(v),y2:ay+5,stroke:css('--ink'),'stroke-opacity':.35},svg); textOn(svg,lx(v),ay+22,l,'meta'); });
+    [[40,'~40 · TODAY’S CHIPS',css('--muted')],[1200,'1,200 · A MONTH INTO A DAY',css('--orange')]].forEach(([v,l,c])=>{
+      mk('line',{x1:lx(v),y1:ay-48,x2:lx(v),y2:ay+30,stroke:c,'stroke-width':1.6,'stroke-dasharray':'4 4'},svg);
+      const t=textOn(svg,lx(v),ay-54,l,'meta'); t.style.fill=c; });
+    const px=lx(tps);
+    mk('circle',{cx:px,cy:ay,r:9,fill:css('--blue')},svg); mk('circle',{cx:px,cy:ay,r:15,fill:'none',stroke:css('--blue'),'stroke-opacity':.35},svg);
+    const vt=textOn(svg,px,ay+46,`${tps>=100?Math.round(tps).toLocaleString('en-GB'):tps.toFixed(1)} tok/s`,'',px>X1-60?'end':px<X0+60?'start':'middle');
+    vt.style.fontSize='15px'; vt.style.fill=css('--blue');
+    // what that means for one long job, and what the target would need
+    const stats=[[`${dur(1e8/tps/86400)}`,'for a 100M-token job'],[`${(1200*tot/1e12).toFixed(1)} TB/s`,'needed for 1,200 tok/s'],[`${Math.round(100*kvB/tot)}%`,'of reads are KV cache']];
+    stats.forEach(([v,l],i)=>{ const x=X0+i*(X1-X0)/3;
+      const t=textOn(svg,x,316,v,'in','start'); t.style.fontFamily=css('--f-body'); t.style.fontSize='26px'; t.style.letterSpacing='-.01em'; t.style.fill=css('--ink');
+      textOn(svg,x,340,l.toUpperCase(),'meta','start'); });
+  }
+  const pick=(attr,set)=>document.querySelectorAll(`[${attr}]`).forEach(btn=>btn.onclick=()=>{ set(btn.getAttribute(attr)); document.querySelectorAll(`[${attr}]`).forEach(o=>o.setAttribute('aria-pressed',o===btn)); render(); });
+  pick('data-dm',v=>model=v); pick('data-dp',v=>prec=v);
+  ctxIn.oninput=render; bwIn.oninput=render;
+  return { render };
+})();
+
 /* ---------- 5 · RISC-V ---------- */
 MOD.riscv=(()=>{
   const fill=document.getElementById('rvFill'), cap=document.getElementById('rvCap'); let view='fsm', d=null;
@@ -1261,7 +1340,7 @@ MOD.riscv=(()=>{
 MOD.etl=(()=>{
   const svg=document.getElementById('etlSvg'), cap=document.getElementById('etlCap'); let mode='ok', d=null;
   const CAP={ok:'Antennas and converters feed an RF matrix, which routes each signal to the modems that need it. A spare path sits ready. Tap any block.',
-             fail:'Path 1 fails. The matrix switches the spare in and the modems keep their signal. The same idea as rerouting work when an accelerator drops out.'};
+             fail:'Path 1 fails. The matrix switches the spare in and the modems keep their signal: redundancy decided at the system level, before anything breaks.'};
   const INFO={sat:'Satellites in orbit, sending down many signals at once.',a1:'Dish and converter chain for one signal path.',a2:'A second, independent signal path.',sp:'A standby path, kept ready for failover.',
     mx:'The RF matrix: a router for radio signals. Single units run from 4 × 4 up to 256 × 256, with spare power and control for redundancy.',sp1:'Splitters copy one signal to several destinations.',m1:'Modems and receivers that use the signals.',m2:'Modems and receivers that use the signals.',m3:'Modems and receivers that use the signals.',
     mon:'Remote monitoring and control, so operators can watch and reroute the whole chain.'};
@@ -1352,7 +1431,11 @@ renderAll();
 const start=ids.indexOf(location.hash.slice(1)); go(start>=0?start:0,true);
 function loop(t){ const m=MOD[ids[cur]]; if(m && m.tick) m.tick(t); requestAnimationFrame(loop); }
 requestAnimationFrame(loop);
-let rt; addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ MOD.raycast.resize(); MOD['gkn-rates'].resize(); },120); });
+/* Captions and detail text change on hover. Let them grow but never shrink, so the figure never resizes under the pointer. */
+const grow=new ResizeObserver(es=>es.forEach(({target:el})=>{ const h=el.offsetHeight; if(h>(+el.dataset.h||0)){ el.dataset.h=h; el.style.minHeight=h+'px'; } }));
+document.querySelectorAll('.viz .cap, #flowDetail').forEach(el=>grow.observe(el));
+const regrow=()=>document.querySelectorAll('[data-h]').forEach(el=>{ el.style.minHeight=''; delete el.dataset.h; });
+let rt; addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ regrow(); MOD.raycast.resize(); MOD['gkn-rates'].resize(); },120); });
 if(document.fonts) document.fonts.ready.then(()=>{ MOD.overview.render(); MOD['gkn-rates'].resize(); });
 const portraitOk=()=>document.documentElement.classList.add('portrait-ok');
 try{ if(sessionStorage.getItem('portraitOk')) portraitOk(); }catch(e){}
